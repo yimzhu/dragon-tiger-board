@@ -1,0 +1,1 @@
+Get Longfupong (龙虎榜) daily and save to MySQL.
