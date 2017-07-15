@@ -182,7 +182,7 @@ def export_dailylhb(date,dlfolder):
         'Connection': 'Keep-Alive',
         'Accept': '*/*',
         'Accept-Language': 'zh-CN,zh;q=0.8',
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.111 Safari/537.36',
         'Accept-Encoding': 'gzip, deflate',
         'Host': '',
         'Referer' : ''
@@ -285,8 +285,10 @@ def export_dailylhb(date,dlfolder):
             prefix = 'nm_jy'    #深圳创业板
         if onworkdata_flag == 0:
             szurl = url + date.strftime("%y%m%d")+'.txt'  
+            #save_file = dlfolder + date.strftime("%y%m%d")+'.txt'
             #dlurl = get_download_url(szurl)  # 真实下载链接
-            #time.sleep(100)
+            time.sleep(1)
+            #urllib.request.urlretrieve(szurl, save_file)
             save_file(szurl, dlfolder)     # 下载并保存文件    
             filename = dlfolder+'/'+prefix+date.strftime("%y%m%d")+'.txt'
             
@@ -339,37 +341,9 @@ def export_dailylhb(date,dlfolder):
     return None
 
 '''################################主程序开始段####################################'''
-end_day = change_strdate_to_date(get_strdate_before_n_tdays(datetime.datetime.now(),1),'%Y-%m-%d')
+end_day = change_strdate_to_date(get_strdate_before_n_tdays(datetime.datetime.now(),0),'%Y-%m-%d')
 
-if os.path.exists(dl_folder + '/' + startFileName):
-    print('日期配置文件存在，开始读取')
-    f=open(dl_folder + '/' + startFileName,'rt')
-    s = f.readline()
-    f.close()
-    if s!='':
-        print('将从日期：'+s+' 开始读取')
-        time_array = time.strptime(s, "%Y%m%d")
-        time_stamp = int(time.mktime(time_array))
-        start_day = datetime.datetime.fromtimestamp(time_stamp)
-    else:
-        print('日期配置文件为空，将从60日前日期开始读取')
-        start_day = end_day - datetime.timedelta(days = 60)
-else:
-    print('日期配置文件不存在，将从60日前日期开始读取')
-    start_day = end_day - datetime.timedelta(days = 60)
+print(end_day.strftime("%Y-%m-%d")+'的交易所数据开始处理')
+export_dailylhb(end_day,dl_folder)
+print(end_day.strftime("%Y-%m-%d")+'的交易所数据已经处理结束')
 
-#print('开始更新数据，从' + start_day +'到' +  end_day)
-
-while start_day.strftime("%Y-%m-%d")!=end_day.strftime("%Y-%m-%d"):
-    print('正在读入' + start_day.strftime("%Y-%m-%d") + '的交易所数据')
-    export_dailylhb(start_day,dl_folder)
-    print(start_day.strftime("%Y-%m-%d")+'的交易所数据已经处理结束')
-    start_day = start_day + datetime.timedelta(days = 1)
-
-#最后更新日期为当前日期
-print('设置最新日期')
-start_day = start_day - datetime.timedelta(days = 1)
-f=open(dl_folder + '/' + startFileName,'w')
-f.write(start_day.strftime("%Y%m%d"))
-f.close()
-print('读取完成')

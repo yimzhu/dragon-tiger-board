@@ -4,6 +4,16 @@
 #步骤3：更新第n日的price和kpi
 import urllib.request,urllib.parse,json,os,time,datetime,http.cookiejar,string,os,sys,pymysql,re,tushare
 
+host = '192.168.100.100'
+#host = 'localhost'
+username = 'root'
+password = ''
+#password = 'password'
+db_name = 'dt'
+
+# 打开数据库连接
+connection = pymysql.connect(host=host,user=username,password=password,charset='utf8mb4',db=db_name)
+
 def get_strdate_after_n_tdays(date,ndaysafter):
     '''
     获取T-n个交易日的日期
@@ -63,15 +73,7 @@ def get_strdate_before_n_tdays(date,ndaysbefore):
     full_transcation_dates_lists_length = len(full_transcation_dates_lists)-1
     return full_transcation_dates_lists[passed_transcation_dates_lists_length-1-int(ndaysbefore)]
 
-host = 'localhost'
-username = 'root'
-password = 'password'
-db_name = 'dt'
-
-# 打开数据库连接
-connection = pymysql.connect(host=host,user=username,password=password,charset='utf8mb4',db=db_name)
-
-def update_tnprice(connection, maxday):
+def update_tnprice(connection, maxday, t5day):
     '''
     更新T+2和T+5绩效表
     :param: connection 
@@ -79,12 +81,12 @@ def update_tnprice(connection, maxday):
     :return: None
     '''        
     #存处理过的买入数据
-    opfolder = os.path.split(os.path.realpath(sys.argv[0]))[0] + '/logs'    
+    logs_folder = os.path.split(os.path.realpath(sys.argv[0]))[0] + '/logs'    
     #记录和原始数据库tprice不一致的日志
-    savedlogs = opfolder + '/' + 'updateprice.log'
+    saved_logs = logs_folder + '/' + 'updateprice.log'
     
     #select_daily_offtrade_sql = 'select distinct(scode),sname,date from daily where t2_date is null and offtrade = 1 and offdate is null／／／／ and offdate is not null order by date desc'
-    select_daily_offtrade_sql = 'select distinct(scode),sname,date,t2_date,t2_price,t5_date from daily where offtrade is null'
+    select_daily_offtrade_sql = 'select distinct(scode),sname,date,t2_date,t2_price,t5_date from daily where offtrade is null and date <= %s'
     update_daily_offtrade_sql = 'update daily set offtrade = %s where scode = %s and date = %s'
     
     select_daily_offdate_sql = 'select offdate from daily where scode where scode = %s and date = %s'
@@ -102,7 +104,7 @@ def update_tnprice(connection, maxday):
     #print(update_daily_tnprice_sql)
     
     with connection.cursor() as cursor:
-        cursor.execute(select_daily_offtrade_sql)
+        cursor.execute(select_daily_offtrade_sql,(t5day))
         stock_lists = cursor.fetchall()
         stock_lists_length = len(stock_lists)        
         stock_list_index = 0
@@ -115,11 +117,8 @@ def update_tnprice(connection, maxday):
             
             t_timearray = time.strptime(str(stock_lists[stock_list_index][2]), "%Y-%m-%d")
             t_timestamp = int(time.mktime(t_timearray))
-            t_date = datetime.datetime.fromtimestamp(t_timestamp)        
-            #t_date = stock_lists[stock_list_index][2]
-            
+            t_date = datetime.datetime.fromtimestamp(t_timestamp) 
             t_day = str(stock_lists[stock_list_index][2])            
-            connection.commit()
             
             #tn_index:第n个交易日的价格，默认为2
             while (n_days != maxday and (tn_price_exists != 1 or tn_index != 5)):
@@ -129,9 +128,8 @@ def update_tnprice(connection, maxday):
                 tn_date = datetime.datetime.fromtimestamp(tn_timestamp) 
                 today_date = datetime.datetime.now()
                 
-                if tn_date < today_date:
+                if tn_date <= today_date:
                     t_info = tushare.get_k_data(stock_lists[stock_list_index][0],start=str(t_day),end=str(t_day))['close'].values
-                    #print(t_info)
                     tn_info = tushare.get_k_data(stock_lists[stock_list_index][0],start=str(tn_day),end=str(tn_day))['close'].values   
                     
                     #通过list长度判断是否有值，即是否停牌
@@ -151,7 +149,7 @@ def update_tnprice(connection, maxday):
                         
                         #判断之前数据库记录是否除权，如为否记录到日志
                         if t_price_histdata != t_price:
-                                output = open(savedlogs,'w',encoding='gbk')
+                                output = open(saved_logs,'w',encoding='gbk')
                                 output.write(str(stock_lists[stock_list_index][1]) + '(' + str(stock_lists[stock_list_index][0]) + '), ' 
                                              + str(stock_lists[stock_list_index][2]) + '\n')#输出写入csv文件
                         
@@ -184,6 +182,7 @@ def update_tnprice(connection, maxday):
                         tn_index = tn_index + 1
                     elif tn_price_exists == 1:
                         tn_index = tn_index + 1
+                    connection.commit()
                     
                 else:
                     #print('调试:交易日期大于今天，跳过...')
@@ -205,5 +204,5 @@ def update_tnprice(connection, maxday):
     return None
 
 
-update_tnprice(connection,60)
+update_tnprice(connection,15,get_strdate_before_n_tdays(datetime.datetime.now(),5))
 connection.close()

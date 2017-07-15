@@ -128,9 +128,7 @@ for output_list in output_lists:
         #print(file_nameonly)
         fn_timearray = time.strptime(file_nameonly, "%Y%m%d")
         fn_timestamp = int(time.mktime(fn_timearray))
-        the_specific_day = datetime.datetime.fromtimestamp(fn_timestamp) 
-        the_day_after_two_days = get_strdate_after_n_tdays(the_specific_day,2)
-        the_day_before_five_days = get_strdate_after_n_tdays(the_specific_day,5)
+        #the_specific_day = datetime.datetime.fromtimestamp(fn_timestamp) 
         
         f = open(output_list, 'rt', encoding='gbk') 
 
