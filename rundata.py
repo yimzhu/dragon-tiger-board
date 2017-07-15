@@ -377,11 +377,7 @@ def update_tnprice(connection, maxday, t5day):
     saved_logs = logs_folder + '/' + 'updateprice.log'
     
     #select_daily_offtrade_sql = 'select distinct(scode),sname,date from daily where t2_date is null and offtrade = 1 and offdate is null／／／／ and offdate is not null order by date desc'
-<<<<<<< HEAD
     select_daily_offtrade_sql = 'select distinct(scode),sname,date,t2_date,t2_price,t5_date from daily where offtrade is null and date <= %s '
-=======
-    select_daily_offtrade_sql = 'select distinct(scode),sname,date,t2_date,t2_price,t5_date from daily where offtrade is null and date < %s '
->>>>>>> 171e6cbf7522b2aec59a6b4396f5a7dab2f792e8
     update_daily_offtrade_sql = 'update daily set offtrade = %s where scode = %s and date = %s'
     
     select_daily_offdate_sql = 'select offdate from daily where scode where scode = %s and date = %s'
@@ -477,11 +473,7 @@ def update_tnprice(connection, maxday, t5day):
                         tn_index = tn_index + 1
                     elif tn_price_exists == 1:
                         tn_index = tn_index + 1
-<<<<<<< HEAD
-                    connection.commit()
-=======
->>>>>>> 171e6cbf7522b2aec59a6b4396f5a7dab2f792e8
-                    
+                    connection.commit() 
                 else:
                     #print('调试:交易日期大于今天，跳过...')
                     if n_days == maxday - 1:
@@ -523,11 +515,7 @@ def save_csv_to_mysql(connection,opfolder,starttimestamp):
             fn_timestamp = int(time.mktime(fn_timearray))
             #the_day = datetime.datetime.fromtimestamp(fn_timestamp) 
 
-<<<<<<< HEAD
             if fn_timestamp >= starttimestamp:              
-=======
-            if fn_timestamp > starttimestamp:              
->>>>>>> 171e6cbf7522b2aec59a6b4396f5a7dab2f792e8
                 f = open(output_list, 'rt', encoding='gbk') 
         
                 try:
@@ -572,13 +560,8 @@ def save_csv_to_mysql(connection,opfolder,starttimestamp):
     return None
 
 '''################################主程序开始段####################################'''
-<<<<<<< HEAD
 end_day = change_strdate_to_date(get_strdate_before_n_tdays(datetime.datetime.now(),0),'%Y-%m-%d')
-#print(end_day)
-=======
-end_day = change_strdate_to_date(get_strdate_before_n_tdays(datetime.datetime.now(),1),'%Y-%m-%d')
 
->>>>>>> 171e6cbf7522b2aec59a6b4396f5a7dab2f792e8
 if os.path.exists(data_folder + '/' + startFileName):
     print('日期配置文件存在，开始读取')
     f=open(data_folder + '/' + startFileName,'rt')
@@ -602,31 +585,18 @@ from_day = start_day
 #循环读取抓取的数据文件
 while start_day.strftime("%Y-%m-%d")!=end_day.strftime("%Y-%m-%d"):
     print('正在读入' + start_day.strftime("%Y-%m-%d") + '的交易所数据')
-<<<<<<< HEAD
     export_dailylhb(start_day,data_folder,output_folder)
-=======
-    #export_dailylhb(start_day,data_folder,output_folder)
->>>>>>> 171e6cbf7522b2aec59a6b4396f5a7dab2f792e8
     print(start_day.strftime("%Y-%m-%d")+'的交易所数据已经处理结束')
     start_day = start_day + datetime.timedelta(days = 1)
 
 #最后更新日期为当前日期
-<<<<<<< HEAD
 updated_start_day = start_day# - datetime.timedelta(days = 1)
-=======
-updated_start_day = start_day - datetime.timedelta(days = 1)
->>>>>>> 171e6cbf7522b2aec59a6b4396f5a7dab2f792e8
 
 fromday_timearray = time.strptime(from_day.strftime("%Y-%m-%d"), "%Y-%m-%d")
 fromday_timestamp = int(time.mktime(fromday_timearray))
 
-<<<<<<< HEAD
 save_csv_to_mysql(connection,output_folder,fromday_timestamp)                    
 update_tnprice(connection,6,get_strdate_before_n_tdays(datetime.datetime.now(),6))
-=======
-#save_csv_to_mysql(connection,output_folder,fromday_timestamp)                    
-update_tnprice(connection,10,get_strdate_before_n_tdays(datetime.datetime.now(),5))
->>>>>>> 171e6cbf7522b2aec59a6b4396f5a7dab2f792e8
 
 connection.close()
 
