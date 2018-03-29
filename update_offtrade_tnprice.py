@@ -132,11 +132,12 @@ def update_tnprice(connection, maxday, t5day):
                 if tn_date <= today_date:
                     t_info = tushare.get_k_data(stock_lists[stock_list_index][0],start=str(t_day),end=str(t_day))['close'].values
                     tn_info_df = tushare.get_k_data(stock_lists[stock_list_index][0], start=str(tn_day), end=str(tn_day))
+
                     #判断Dataframe是否为空，为空置0，不为空取close收盘价字段值
                     if(tn_info_df.empty):
                         tn_price_exists = 0
-
                     else:
+                        # print("[DEBUG] CODE:" + stock_lists[stock_list_index][0] + "DATE: " + tn_day)
                         tn_info = tushare.get_k_data(stock_lists[stock_list_index][0],start=str(tn_day),end=str(tn_day))['close'].values
                         #通过list长度判断是否有值，即是否停牌
                         tn_price_exists = len(tn_info)
@@ -197,9 +198,16 @@ def update_tnprice(connection, maxday, t5day):
                     if n_days == maxday - 1:
                         #取次日交易日价格，避免交易时段获取不到价格信息
                         td = get_strdate_before_n_tdays(datetime.datetime.now(),1)
-                        day_info = tushare.get_k_data(stock_lists[stock_list_index][0],start=str(td),end=str(td))['close'].values
+                        tn_info_df = tushare.get_k_data(stock_lists[stock_list_index][0], start=str(tn_day),
+                                                        end=str(tn_day))
+                        if tn_info_df.empty:
+                            no_tradeinfo = 1
+                        else:
+                            day_info = tushare.get_k_data(stock_lists[stock_list_index][0],start=str(td),end=str(td))['close'].values
+                            if len(day_info) == 0:
+                                no_tradeinfo = 1
                         
-                        if len(day_info) == 0:
+                        if (no_tradeinfo == 1):
                             print('截止今日，没有获取到T+2或T+5的交易日价格，置offtrade为1，offdate为今日日期')
                             cursor.execute(update_daily_offdate_sql,(today_date.strftime("%Y-%m-%d"),stock_lists[stock_list_index][0], stock_lists[stock_list_index][2]))                                 
                             #将读取交易日超过29天的设置offtrade=1，停牌标记
