@@ -131,15 +131,15 @@ def update_tnprice(connection, maxday, t5day):
 
                 if tn_date <= today_date:
                     t_info = tushare.get_k_data(stock_lists[stock_list_index][0],start=str(t_day),end=str(t_day))['close'].values
+                    tn_info_df = tushare.get_k_data(stock_lists[stock_list_index][0], start=str(tn_day), end=str(tn_day))
                     #判断Dataframe是否为空，为空置0，不为空取close收盘价字段值
-                    if(tn_info.empty):
-                        tn_info = 0
+                    if(tn_info_df.empty):
+                        tn_price_exists = 0
+
                     else:
                         tn_info = tushare.get_k_data(stock_lists[stock_list_index][0],start=str(tn_day),end=str(tn_day))['close'].values
-
-
-                    #通过list长度判断是否有值，即是否停牌
-                    tn_price_exists = len(tn_info)
+                        #通过list长度判断是否有值，即是否停牌
+                        tn_price_exists = len(tn_info)
                     
                     #print('调试:' + str(stock_lists[stock_list_index][0]) + ', ' + str(stock_lists[stock_list_index][2]) + '后第[' + str(n_days) + ']交易日' + tn_day + ', 是否停牌[' + str(tn_price_exists) + '],交易日计数[' + str(tn_index) + ']')
                     if (tn_price_exists == 1 and tn_index == 1):
