@@ -127,15 +127,21 @@ def update_tnprice(connection, maxday, t5day):
                 tn_timestamp = int(time.mktime(tn_timearray))
                 tn_date = datetime.datetime.fromtimestamp(tn_timestamp) 
                 today_date = datetime.datetime.now()
-                
+
+
                 if tn_date <= today_date:
                     t_info = tushare.get_k_data(stock_lists[stock_list_index][0],start=str(t_day),end=str(t_day))['close'].values
-                    tn_info = tushare.get_k_data(stock_lists[stock_list_index][0],start=str(tn_day),end=str(tn_day))['close'].values   
-                    
+                    #判断Dataframe是否为空，为空置0，不为空取close收盘价字段值
+                    if(tn_info.empty):
+                        tn_info = 0
+                    else:
+                        tn_info = tushare.get_k_data(stock_lists[stock_list_index][0],start=str(tn_day),end=str(tn_day))['close'].values
+
+
                     #通过list长度判断是否有值，即是否停牌
                     tn_price_exists = len(tn_info)
                     
-                    print('调试:' + str(stock_lists[stock_list_index][0]) + ', ' + str(stock_lists[stock_list_index][2]) + '后第[' + str(n_days) + ']交易日' + tn_day + ', 是否停牌[' + str(tn_price_exists) + '],交易日计数[' + str(tn_index) + ']')
+                    #print('调试:' + str(stock_lists[stock_list_index][0]) + ', ' + str(stock_lists[stock_list_index][2]) + '后第[' + str(n_days) + ']交易日' + tn_day + ', 是否停牌[' + str(tn_price_exists) + '],交易日计数[' + str(tn_index) + ']')
                     if (tn_price_exists == 1 and tn_index == 1):
                         t2_price = tn_info[0]
                         #输出第2日价格结果到数据库
@@ -164,6 +170,7 @@ def update_tnprice(connection, maxday, t5day):
                         print(stock_lists[stock_list_index][1] + '(' + stock_lists[stock_list_index][0] + '), 初始交易日[' + str(stock_lists[stock_list_index][2])
                               + ']价格[' + str(t_price) + '], 第2日[' + str(tn_day) + ']的价格[' + str(t2_price) + '], 绩效为[' + str(t2_kpi) + '%]')
                         tn_index = tn_index + 1
+                        connection.commit()
                         
                     elif (tn_price_exists == 1 and tn_index == 4):
                         t5_price = tn_info[0]
@@ -180,6 +187,7 @@ def update_tnprice(connection, maxday, t5day):
                         print(stock_lists[stock_list_index][1] + '(' + stock_lists[stock_list_index][0] + '), 初始交易日[' + str(stock_lists[stock_list_index][2])
                               + ']价格[' + str(t_price) + '], 第5日[' + str(tn_day) + ']的价格[' + str(t5_price) + '], 绩效为[' + str(t5_kpi) + '%]')
                         tn_index = tn_index + 1
+                        connection.commit()
                     elif tn_price_exists == 1:
                         tn_index = tn_index + 1
                     connection.commit()
@@ -204,5 +212,5 @@ def update_tnprice(connection, maxday, t5day):
     return None
 
 
-update_tnprice(connection,15,get_strdate_before_n_tdays(datetime.datetime.now(),5))
+update_tnprice(connection,80,get_strdate_before_n_tdays(datetime.datetime.now(),5))
 connection.close()
